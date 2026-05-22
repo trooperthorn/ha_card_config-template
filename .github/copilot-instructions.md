@@ -19,11 +19,8 @@ yarn lint
 ### Primary files
 
 - `src/config-template-card.ts` — main card implementation
-- `src/editor.ts` — visual editor (`LovelaceCardEditor`)
 - `src/types.ts` — card config and type definitions
-- `src/action-handler-directive.ts` — tap/hold/double-tap directive
-- `src/localize/localize.ts` — localization helper
-- `src/localize/languages/en.json` and `src/localize/languages/nb.json` — translation files
+- `src/const.ts` — card version constant
 - `rollup.config.js` and `rollup.config.dev.js` — production and dev build config
 
 ## Architecture and patterns
@@ -31,7 +28,6 @@ yarn lint
 - The custom element is `custom:config-template-card`.
 - Prefer Lit 3 patterns and idiomatic web component structure.
 - Keep configuration shape centralized in `src/types.ts`.
-- Keep editor schema and defaults aligned with runtime card behavior.
 - Keep feature logic in small, readable helpers instead of long monolithic methods.
 
 ## TypeScript standards
@@ -45,23 +41,15 @@ yarn lint
 
 - Use `@property` for public reactive inputs and `@state` for internal state.
 - Avoid direct DOM mutation when Lit reactivity can handle updates.
-- Preserve existing card/editor lifecycle behavior.
+- Preserve existing card lifecycle behavior.
 - For card config, validate early in `setConfig` and throw actionable errors.
 - Keep `getCardSize` deterministic and aligned with rendered density.
 
 ## Home Assistant integration
 
 - Use Home Assistant helpers and conventions from `custom-card-helpers`.
-- Ensure tap, hold, and double-tap actions are wired through existing action patterns.
 - Support unavailable/loading/error states gracefully.
 - Keep Lovelace config compatibility in mind when changing schema or defaults.
-
-## Localization and copy
-
-- Do not hardcode user-facing strings when a localize key should be used.
-- Add new translation keys to both language files currently in the repo (`en.json`, `nb.json`).
-- Keep copy concise, sentence case, and user-facing.
-- Favor consistent terminology across card UI and editor labels.
 
 ## Styling and UX
 
@@ -88,14 +76,12 @@ yarn lint
 ## Pull request guidance
 
 - Keep PRs focused to one logical change.
-- Include screenshots or short clips for visible UI/editor changes.
+- Include screenshots or short clips for visible UI changes.
 - Document config changes and migration notes when applicable.
 - Call out any follow-up work explicitly instead of bundling extra scope.
 
 ## Avoid these common issues
 
-- Breaking editor/card config parity
 - Adding untyped dynamic config access
-- Hardcoding text instead of localization keys
 - Overriding theme behavior with fixed styles
 - Changing output filenames or card tag without explicit request
