@@ -1,7 +1,7 @@
 /node_modules/
 /.rpt2_cache/
 package-lock.json
-/dist
+
 homeassistant/
 .devcontainer/config/.storage/
 .devcontainer/config/tts/
@@ -13,3 +13,4 @@ homeassistant/
 .devcontainer/config/known_devices.yaml
 .devcontainer/config/.ha_run.lock
 .yarn/
+__pycache__/

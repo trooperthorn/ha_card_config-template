@@ -1,5 +1,6 @@
 {
-    "name": "Config Template Card",
-    "render_readme": true,
-    "filename": "config-template-card.js"
+  "name": "Config Template Card",
+  "render_readme": true,
+  "filename": "config-template-card.js",
+  "homeassistant": "2026.9.0"
 }

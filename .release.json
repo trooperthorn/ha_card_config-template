@@ -1,0 +1,27 @@
+{
+  "tag_prefix": "",
+  "timezone": "America/Chicago",
+  "release_paths": [
+    "src",
+    "VERSION",
+    "package.json",
+    "yarn.lock",
+    "rollup.config.js",
+    "tsconfig.json",
+    "dist"
+  ],
+  "version_fields": [
+    {
+      "path": "VERSION",
+      "kind": "regex",
+      "pattern": "^(\\S+)\\s*$",
+      "template": "{version}\n"
+    },
+    {
+      "path": "src/const.ts",
+      "kind": "regex",
+      "pattern": "^export const CARD_VERSION = '([^']+)';",
+      "template": "export const CARD_VERSION = '{version}';"
+    }
+  ]
+}
