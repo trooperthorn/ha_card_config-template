@@ -1,10 +1,10 @@
-# Config Template Card Card
+# Config Template Card
 
 📝 Templatable Configuration Card
 
 [![GitHub Release][releases-shield]][releases]
 [![License][license-shield]](LICENSE.md)
-[![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge)](https://github.com/hacs/integration)
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge)](https://github.com/hacs/integration)
 
 ![Project Maintenance][maintenance-shield]
 [![GitHub Activity][commits-shield]][commits]
@@ -12,18 +12,19 @@
 [![Discord][discord-shield]][discord]
 [![Community Forum][forum-shield]][forum]
 
-[![Twitter][twitter]][twitter]
-[![Github][github]][github]
-
 This card is for [Lovelace](https://www.home-assistant.io/lovelace) on [Home Assistant](https://www.home-assistant.io/) that allows you to use pretty much any valid Javascript on the hass object in your configuration
+
+## About this fork
+
+This repository is a maintained fork of [iantrich/config-template-card](https://github.com/iantrich/config-template-card). It starts from upstream's Lit 3 rebuild (2.0.0-b2) and adds the fixes that upstream left in open pull requests: the card no longer disappears when Home Assistant delivers the card helpers after the first render (upstream #201), templates embedded inside longer strings work again (#190), multi-statement `${ }` blocks and templated `entities` lists work again (#191, #192), and the wrapped card fills its grid or stack cell (#158). The reasoning behind each change is in [docs/README.md](docs/README.md).
 
 ## Minimum Home Assistant version
 
-Home Assistant version 2026.2.3 or higher is required as of release 2.0.0 of config-template-card
+The fork is built and tested against Home Assistant 2026.9. `hacs.json` states that floor. Older releases are not tested; the card uses only `window.loadCardHelpers`, so it may work on them, but that is unverified.
 
 ## Installation
 
-Use [HACS](https://hacs.xyz) or follow this [guide](https://github.com/thomasloven/hass-config/wiki/Lovelace-Plugins)
+Add `https://github.com/trooperthorn/ha_card_config-template` to HACS as a custom repository of type Dashboard, then download it. If the upstream card is already installed, remove it first so both do not register `config-template-card`. HACS serves the file at `/hacsfiles/ha_card_config-template/config-template-card.js`. Without HACS, copy `dist/config-template-card.js` to `<config>/www/` and register it as a module resource.
 
 ## Options
 
@@ -216,19 +217,21 @@ Both arrays and objects are supported, just like in card's local variables. It i
 
 ## Developers
 
-Fork and then clone the repo to your local machine. From the cloned directory run
+Clone the repository, run `corepack enable`, then `yarn install --immutable` and `yarn build`. The build runs lint, typecheck, the vitest suite, and rollup in that order. `dist/config-template-card.js` is committed; CI fails when it differs from a fresh build, so rebuild and commit it with every source change.
 
-`yarn install && yarn build`
+## Versioning and releases
 
-[commits-shield]: https://img.shields.io/github/commit-activity/y/custom-cards/config-template-card.svg?style=for-the-badge
-[commits]: https://github.com/custom-cards/config-template-card/commits/master
+Versions are CalVer `YYYY.MM.DD.N`; tags carry the bare number, matching the tag style upstream used. The root `VERSION` file and `CARD_VERSION` in `src/const.ts` must agree, and `.release.json` names both. `package.json` stays at an inert `0.0.0` because Yarn requires SemVer there.
+
+A merge to `main` is the only release path. `Release` runs on every push to `main`: it validates the version, rebuilds the card and checks the committed dist matches, creates the tag, drafts the release with `dist/config-template-card.js` and its SHA-256 attached, and publishes it. `Prepare release` runs after every successful `Release` and, when release-bearing files changed since the last tag, writes the next version, rebuilds `dist`, and opens an auto-merging PR through the release GitHub App (variable `RELEASE_AUTOMATION_CLIENT_ID`, secret `RELEASE_AUTOMATION_PRIVATE_KEY`). Without those credentials, run `python scripts/set_version.py --next-from-tags`, `yarn rollup`, commit both, and open a PR; the merge publishes.
+
+[commits-shield]: https://img.shields.io/github/commit-activity/y/trooperthorn/ha_card_config-template.svg?style=for-the-badge
+[commits]: https://github.com/trooperthorn/ha_card_config-template/commits/main
 [discord]: https://discord.gg/Qa5fW2R
 [discord-shield]: https://img.shields.io/discord/330944238910963714.svg?style=for-the-badge
 [forum-shield]: https://img.shields.io/badge/community-forum-brightgreen.svg?style=for-the-badge
 [forum]: https://community.home-assistant.io/t/100-templatable-lovelace-configuration-card/105241
-[license-shield]: https://img.shields.io/github/license/custom-cards/config-template-card.svg?style=for-the-badge
-[maintenance-shield]: https://img.shields.io/badge/maintainer-Ian%20Richardson%20%40iantrich-blue.svg?style=for-the-badge
-[releases-shield]: https://img.shields.io/github/release/custom-cards/config-template-card.svg?style=for-the-badge
-[releases]: https://github.com/custom-cards/config-template-card/releases
-[twitter]: https://img.shields.io/twitter/follow/iantrich.svg?style=social
-[github]: https://img.shields.io/github/followers/iantrich.svg?style=social
+[license-shield]: https://img.shields.io/github/license/trooperthorn/ha_card_config-template.svg?style=for-the-badge
+[maintenance-shield]: https://img.shields.io/badge/maintainer-trooperthorn-blue.svg?style=for-the-badge
+[releases-shield]: https://img.shields.io/github/release/trooperthorn/ha_card_config-template.svg?style=for-the-badge
+[releases]: https://github.com/trooperthorn/ha_card_config-template/releases
