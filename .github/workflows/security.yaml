@@ -39,4 +39,4 @@ jobs:
           node-version: 24
       - run: corepack enable
       - run: yarn install --immutable
-      - run: yarn npm audit --severity moderate
+      - run: yarn npm audit --severity moderate --no-deprecations

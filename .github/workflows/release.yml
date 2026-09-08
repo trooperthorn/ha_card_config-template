@@ -97,8 +97,8 @@ jobs:
             gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
               --title "$TAG" --generate-notes --verify-tag --draft
           fi
-          sha256sum dist/config-template-card.js > config-template-card.js.sha256
-          gh release upload "$TAG" dist/config-template-card.js config-template-card.js.sha256 \
+          (cd dist && sha256sum config-template-card.js > config-template-card.js.sha256)
+          gh release upload "$TAG" dist/config-template-card.js dist/config-template-card.js.sha256 \
             --repo "$GITHUB_REPOSITORY" --clobber
 
       - name: Publish and lock the release

@@ -38,3 +38,7 @@ HACS looks for the card in `dist/` before it looks at release assets. Committing
 ## 2026-09-08: upstream's Claude and Copilot files
 
 `master` carried two workflows that call the Claude Code action with an OAuth secret this repository does not have; they were not carried over. `beta`'s `.github/copilot-instructions.md`, with `AGENTS.md` and `CLAUDE.md` pointing at it, is kept as the repository's agent contract because its rules (Lit 3 patterns, strict typing, configuration shape in `types.ts`) match the house style.
+
+## 2026-09-08: ESLint stays on 9
+
+`yarn npm audit` reports ESLint 9 as deprecated. ESLint 10 was tried and rejected because `eslint-plugin-import` declares a peer range that ends at 9, and its rules are what keeps the import order and type-only imports in `src/` consistent. The audit step therefore runs with `--no-deprecations` so a deprecation notice cannot block a release, while real advisories still fail it. The esbuild and vitest advisories the first audit reported were fixed by upgrading both.

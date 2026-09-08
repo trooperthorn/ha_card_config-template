@@ -8,3 +8,4 @@ Dated open items. Upstream issue numbers refer to iantrich/config-template-card.
 - 2026-09-08: View-level variables (upstream PR 171) if a public way to read the current view appears; the private `___curView` field is not acceptable.
 - 2026-09-08: Wildcard `entities` entries (upstream issue 95) and attribute or state translation helpers (issue 102) have no design yet.
 - 2026-09-08: The GitHub App variable and secret for zero-touch release bumps are not yet set on this repository.
+- 2026-09-08: Move to ESLint 10 once eslint-plugin-import (or a replacement such as eslint-plugin-import-x) supports it, then drop `--no-deprecations` from the audit step.
