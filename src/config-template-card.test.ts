@@ -332,6 +332,161 @@ describe('ConfigTemplateCard logic', () => {
     expect(value).toBe('GLOBAL-LOCAL');
   });
 
+  it('_evaluateTemplate evaluates multi-statement block templates with let declarations', () => {
+    card.hass = {
+      user: { name: 'Dev' },
+      states: {
+        'light.kitchen': { state: 'on' },
+        'light.bedroom': { state: 'off' },
+      },
+    } as never;
+
+    (card as unknown as { _config: unknown })._config = {
+      ...baseConfig,
+      variables: {
+        LIGHTS: "Object.keys(states).filter(k => k.startsWith('light'))",
+      },
+    };
+
+    const value = (
+      card as unknown as {
+        _evaluateTemplate: (template: string) => unknown;
+      }
+    )._evaluateTemplate('${\n  let result = [];\n  LIGHTS.forEach(e => result.push(e));\n  result;\n}');
+
+    expect(Array.isArray(value)).toBe(true);
+    expect(value).toContain('light.kitchen');
+    expect(value).toContain('light.bedroom');
+  });
+
+  it('shouldUpdate handles entities as a string template that evaluates to an array', () => {
+    (card as unknown as { _initialized: boolean })._initialized = true;
+    (card as unknown as { _config: unknown })._config = {
+      ...baseConfig,
+      entities: "${Object.keys(states).filter(k => k.startsWith('light'))}",
+      variables: {},
+    };
+
+    card.hass = {
+      states: {
+        'light.kitchen': {
+          state: 'on',
+          last_changed: '2',
+          last_updated: '2',
+        },
+      },
+    } as never;
+
+    const changedProps = new Map([
+      [
+        'hass',
+        {
+          states: {
+            'light.kitchen': {
+              state: 'off',
+              last_changed: '1',
+              last_updated: '1',
+            },
+          },
+        },
+      ],
+    ]);
+
+    const result = (
+      card as unknown as {
+        shouldUpdate: (props: Map<string, unknown>) => boolean;
+      }
+    ).shouldUpdate(changedProps);
+
+    expect(result).toBe(true);
+  });
+
+  it('_evaluateTemplate interpolates templates embedded in a longer string', () => {
+    card.hass = {
+      states: {
+        'sensor.best_model': { state: 'Linear' },
+      },
+    } as never;
+    (card as unknown as { _config: unknown })._config = {
+      ...baseConfig,
+      variables: { best_model: "states['sensor.best_model'].state.toLowerCase()" },
+    };
+    const evaluate = (card as unknown as { _evaluateTemplate: (template: string) => unknown })._evaluateTemplate.bind(
+      card,
+    );
+
+    expect(evaluate('sensor.${best_model}_p_pv_forecast')).toBe('sensor.linear_p_pv_forecast');
+    expect(evaluate('Model ${best_model} (${best_model.length})')).toBe('Model linear (6)');
+    expect(evaluate('${1 + 1}')).toBe(2);
+    expect(evaluate('plain `backtick` text with ${best_model}')).toBe('plain `backtick` text with linear');
+  });
+
+  it('shouldUpdate returns true when card helpers arrive after the first hass update', () => {
+    (card as unknown as { _initialized: boolean })._initialized = true;
+    (card as unknown as { _config: unknown })._config = { ...baseConfig };
+    card.hass = {
+      states: { 'light.kitchen': { state: 'on', last_changed: '1', last_updated: '1' } },
+    } as never;
+
+    const changedProps = new Map<string, unknown>([['_helpers', undefined]]);
+    const result = (card as unknown as { shouldUpdate: (props: Map<string, unknown>) => boolean }).shouldUpdate(
+      changedProps,
+    );
+
+    expect(result).toBe(true);
+  });
+
+  it('passes a static wrapped card config through unchanged and re-renders on a watched sensor change', () => {
+    // Mirrors the tablet dashboard gauge: two watched power sensors, no template in the child.
+    const gauge = {
+      type: 'custom:modern-circular-gauge',
+      entity: 'sensor.meter_200a_power',
+      name: 'Home',
+      min: -15000,
+      max: 15000,
+      needle: true,
+      secondary: { entity: 'sensor.solar_125a_power', state_size: 'big', show_gauge: 'outter' },
+      segments: [
+        { from: -6000, color: 'green' },
+        { from: -2000, color: 'yellow' },
+        { from: 6000, color: 'red' },
+      ],
+    };
+    (card as unknown as { _initialized: boolean })._initialized = true;
+    (card as unknown as { _config: unknown })._config = {
+      type: 'custom:config-template-card',
+      entities: ['sensor.meter_200a_power', 'sensor.solar_125a_power'],
+      card: gauge,
+    };
+    card.hass = {
+      states: {
+        'sensor.meter_200a_power': { state: '1200', last_changed: '2', last_updated: '2' },
+        'sensor.solar_125a_power': { state: '300', last_changed: '1', last_updated: '1' },
+      },
+    } as never;
+
+    const evaluated = (
+      card as unknown as { _evaluateConfig: (config: Record<string, unknown>) => Record<string, unknown> }
+    )._evaluateConfig(structuredClone(gauge));
+    expect(evaluated).toEqual(gauge);
+
+    const oldHass = {
+      states: {
+        'sensor.meter_200a_power': { state: '1100', last_changed: '1', last_updated: '1' },
+        'sensor.solar_125a_power': { state: '300', last_changed: '1', last_updated: '1' },
+      },
+    };
+    const changed = (card as unknown as { shouldUpdate: (props: Map<string, unknown>) => boolean }).shouldUpdate(
+      new Map<string, unknown>([['hass', oldHass]]),
+    );
+    expect(changed).toBe(true);
+
+    const unchanged = (card as unknown as { shouldUpdate: (props: Map<string, unknown>) => boolean }).shouldUpdate(
+      new Map<string, unknown>([['hass', card.hass]]),
+    );
+    expect(unchanged).toBe(false);
+  });
+
   it('_evaluateTemplate logs context and rethrows when expression evaluation fails', () => {
     card.hass = {
       states: {},

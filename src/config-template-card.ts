@@ -115,7 +115,7 @@ export class ConfigTemplateCard extends LitElement {
       this._initialize();
     }
 
-    if (changedProps.has('_config')) {
+    if (changedProps.has('_config') || changedProps.has('_helpers')) {
       return true;
     }
 
@@ -123,7 +123,16 @@ export class ConfigTemplateCard extends LitElement {
       const oldHass = changedProps.get('hass') as HomeAssistant | undefined;
 
       if (oldHass) {
-        for (const entityTemplate of this._config.entities) {
+        const rawEntities = this._config.entities;
+        const entityList: string[] =
+          typeof rawEntities === 'string'
+            ? (() => {
+                const r = this._evaluateTemplate(rawEntities);
+                return Array.isArray(r) ? (r as string[]) : [String(r)];
+              })()
+            : rawEntities;
+
+        for (const entityTemplate of entityList) {
           const currentEntityId = String(this._evaluateTemplate(entityTemplate));
           const oldEntityId = String(this._evaluateTemplate(entityTemplate, oldHass));
 
@@ -211,7 +220,7 @@ export class ConfigTemplateCard extends LitElement {
       }
     }
 
-    return html` <div id="card">${element}</div> `;
+    return html` <div id="card" style="height: 100%;">${element}</div> `;
   }
 
   private _initialize(): void {
@@ -322,10 +331,19 @@ export class ConfigTemplateCard extends LitElement {
 
       const namedVarNames = Object.keys(namedVars);
       const namedVarValues = namedVarNames.map((name) => vars[name]);
-      const evaluator = new Function('hass', 'states', 'user', 'vars', ...namedVarNames, `return (${expression});`);
+      // eval inside the function scope returns the completion value; see docs/design.md.
+      const evaluator = new Function(
+        'hass',
+        'states',
+        'user',
+        'vars',
+        ...namedVarNames,
+        '__code',
+        `return eval(__code);`,
+      );
 
       try {
-        return evaluator(hass, states, user, vars, ...namedVarValues);
+        return evaluator(hass, states, user, vars, ...namedVarValues, expression);
       } catch (error) {
         console.error('Failed to evaluate template expression', {
           template,
@@ -369,6 +387,14 @@ export class ConfigTemplateCard extends LitElement {
       vars[varName] = newV;
     }
 
-    return evaluateExpression(template.substring(2, template.length - 1), 'template');
+    const isSingleExpression =
+      template.startsWith('${') && template.endsWith('}') && !template.slice(2, -1).includes('${');
+
+    if (isSingleExpression) {
+      // A bare expression keeps its JavaScript type; anything else becomes a string.
+      return evaluateExpression(template.substring(2, template.length - 1), 'template');
+    } else {
+      return evaluateExpression('`' + template.replace(/`/g, '\\`') + '`', 'template');
+    }
   }
 }
